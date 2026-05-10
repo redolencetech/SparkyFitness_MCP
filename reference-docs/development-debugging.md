@@ -1,0 +1,32 @@
+The `devTools` are a collection of utility functions designed to aid developers in inspecting the system, debugging issues, and performing internal tasks. These tools provide access to database schema, user information, and server stats.
+
+**Tool Name:** `devTools` (Note: This is a collection of tools, not a single one)
+
+### [`inspect_schema`](https://codewithcj.github.io/SparkyFitness/developer/mcp/dev#inspect_schema)
+
+-   **Description:** Inspect the database schema to understand available tables and columns.
+-   **Parameters:**
+    -   `table` (string): Name of the table to inspect (e.g., `foods`, `exercise_entries`).
+
+### [`get_user_info`](https://codewithcj.github.io/SparkyFitness/developer/mcp/dev#get_user_info)
+
+-   **Description:** Get information about the current test user being used by MCP.
+-   **Parameters:** None.
+
+### [`get_db_stats`](https://codewithcj.github.io/SparkyFitness/developer/mcp/dev#get_db_stats)
+
+-   **Description:** Get current database connection stats (DB Name, User, Search Path).
+-   **Parameters:** None.
+
+### [`log_food_direct`](https://codewithcj.github.io/SparkyFitness/developer/mcp/dev#log_food_direct)
+
+-   **Description:** Emergency tool to log food by bypassing internal configuration. This is primarily for direct debugging and data insertion.
+-   **Parameters:**
+    -   `userId` (string or number): The ID of the user.
+    -   `foodName` (string): The name of the food.
+    -   `mealType` (string, optional): The meal type (e.g., 'dinner').
+
+### [`run_project_tests`](https://codewithcj.github.io/SparkyFitness/developer/mcp/dev#run_project_tests)
+
+-   **Description:** Run the project's test suite to verify changes.
+-   **Parameters:** None.
