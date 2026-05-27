@@ -146,3 +146,62 @@ export const manageFoodSchema = z.discriminatedUnion("action", [
 ]);
 
 export type ManageFoodInput = z.infer<typeof manageFoodSchema>;
+
+
+// Flat input shape published to MCP clients as `inputSchema`. The MCP TS SDK
+// (^1.27) can serialize `z.object()` to JSON Schema but emits an empty
+// `{type:"object",properties:{}}` for `z.discriminatedUnion()`, which leaves
+// MCP clients with no way to know how to call the tool. Runtime validation
+// continues to use `manageFoodSchema` (the discriminated union) inside the
+// tool handler via `safeParse`, so strict per-action validation is preserved.
+export const manageFoodInput = z.object({
+  action: z.enum([
+    "search_food",
+    "log_food",
+    "create_food",
+    "search_meal",
+    "log_meal",
+    "list_diary",
+    "delete_entry",
+    "delete_food",
+    "update_entry",
+    "copy_from_yesterday",
+    "save_as_meal_template",
+  ]).describe("Action to perform. Each value selects a different per-action signature; see the tool description for required fields per action."),
+  food_name: z.string().min(1).max(200).optional().describe("Food name — required for search_food, log_food, create_food, delete_food (alternative to food_id)"),
+  food_id: uuidSchema.optional().describe("Food UUID — alternative to food_name"),
+  variant_id: uuidSchema.optional().describe("Food variant UUID"),
+  brand: z.string().max(200).optional().describe("Brand name — for create_food"),
+  quantity: z.coerce.number().min(0).optional().describe("Amount consumed (units defined by 'unit')"),
+  unit: z.string().min(1).max(50).optional().describe("Unit of measurement ('g', 'serving', 'piece', etc.)"),
+  meal_type: mealTypeEnum.optional().describe("breakfast | lunch | dinner | snacks"),
+  entry_date: dateSchema.optional().describe("Date for the entry (YYYY-MM-DD)"),
+  meal_id: uuidSchema.optional().describe("Meal template UUID"),
+  meal_name: z.string().min(1).max(200).optional().describe("Meal template name"),
+  search_type: searchTypeEnum.optional().describe("exact | broad — for search_food"),
+  limit: z.coerce.number().int().min(1).max(100).optional().describe("Pagination limit"),
+  offset: z.coerce.number().int().min(0).optional().describe("Pagination offset"),
+  calories: z.coerce.number().min(0).optional().describe("Calories (kcal) — required for create_food"),
+  protein: z.coerce.number().min(0).optional().describe("Protein (g) — required for create_food"),
+  carbs: z.coerce.number().min(0).optional().describe("Carbohydrates (g) — required for create_food"),
+  fat: z.coerce.number().min(0).optional().describe("Total fat (g) — required for create_food"),
+  saturated_fat: z.coerce.number().min(0).optional(),
+  polyunsaturated_fat: z.coerce.number().min(0).optional(),
+  monounsaturated_fat: z.coerce.number().min(0).optional(),
+  trans_fat: z.coerce.number().min(0).optional(),
+  cholesterol: z.coerce.number().min(0).optional(),
+  sodium: z.coerce.number().min(0).optional(),
+  potassium: z.coerce.number().min(0).optional(),
+  fiber: z.coerce.number().min(0).optional(),
+  sugar: z.coerce.number().min(0).optional(),
+  vitamin_a: z.coerce.number().min(0).optional(),
+  vitamin_c: z.coerce.number().min(0).optional(),
+  calcium: z.coerce.number().min(0).optional(),
+  iron: z.coerce.number().min(0).optional(),
+  gi: giIndexEnum.optional(),
+  entry_id: uuidSchema.optional().describe("Diary entry UUID"),
+  entry_type: entryTypeEnum.optional().describe("food_entry | food_entry_meal"),
+  description: z.string().max(1000).optional().describe("Description (for save_as_meal_template)"),
+  target_date: optionalDateSchema.describe("Target date (defaults to today)"),
+  source_date: optionalDateSchema.describe("Source date (defaults to yesterday)"),
+});

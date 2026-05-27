@@ -1,5 +1,5 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { manageFoodSchema, type ManageFoodInput } from "../schemas/food.js";
+import { manageFoodSchema, manageFoodInput, type ManageFoodInput } from "../schemas/food.js";
 import * as foodService from "../services/foodService.js";
 import { ERRORS } from "../utils/errors.js";
 import { formatList, formatConfirmation, formatSuccess } from "../utils/formatting.js";
@@ -29,7 +29,10 @@ Actions:
 - update_entry(entry_id, entry_type, quantity, unit)
 - copy_from_yesterday(target_date?, source_date?, meal_type?)
 - save_as_meal_template(entry_date, meal_type, meal_name, description?)`,
-      inputSchema: manageFoodSchema,
+      // Publish the flat shape so MCP clients see the available fields.
+      // The SDK cannot serialize z.discriminatedUnion; manageFoodSchema is
+      // still used below via safeParse for strict per-action validation.
+      inputSchema: manageFoodInput,
       annotations: {
         readOnlyHint: false,
         destructiveHint: false,
@@ -38,7 +41,11 @@ Actions:
       },
     },
     async (rawArgs): Promise<ToolResponse> => {
-      const args = rawArgs as unknown as ManageFoodInput;
+      const parsed = manageFoodSchema.safeParse(rawArgs);
+      if (!parsed.success) {
+        return ERRORS.VALIDATION(parsed.error.issues.map(i => `${i.path.join(".")}: ${i.message}`).join("; "));
+      }
+      const args: ManageFoodInput = parsed.data;
       try {
         switch (args.action) {
           case "search_food": {

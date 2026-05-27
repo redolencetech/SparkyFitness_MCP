@@ -1,5 +1,5 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { manageCheckinSchema, type ManageCheckinInput } from "../schemas/checkin.js";
+import { manageCheckinSchema, manageCheckinInput, type ManageCheckinInput } from "../schemas/checkin.js";
 import * as checkinService from "../services/checkinService.js";
 import { ERRORS } from "../utils/errors.js";
 import { formatList, formatConfirmation, formatSuccess } from "../utils/formatting.js";
@@ -26,7 +26,10 @@ Actions:
 - create_category(category_name, unit?)
 - list_categories()
 - list_checkin_diary(entry_date?)`,
-      inputSchema: manageCheckinSchema,
+      // Publish the flat shape so MCP clients see the available fields.
+      // The SDK cannot serialize z.discriminatedUnion; manageCheckinSchema is
+      // still used below via safeParse for strict per-action validation.
+      inputSchema: manageCheckinInput,
       annotations: {
         readOnlyHint: false,
         destructiveHint: false,
@@ -35,7 +38,11 @@ Actions:
       },
     },
     async (rawArgs): Promise<ToolResponse> => {
-      const args = rawArgs as unknown as ManageCheckinInput;
+      const parsed = manageCheckinSchema.safeParse(rawArgs);
+      if (!parsed.success) {
+        return ERRORS.VALIDATION(parsed.error.issues.map(i => `${i.path.join(".")}: ${i.message}`).join("; "));
+      }
+      const args: ManageCheckinInput = parsed.data;
       try {
         switch (args.action) {
           case "log_biometrics": {
